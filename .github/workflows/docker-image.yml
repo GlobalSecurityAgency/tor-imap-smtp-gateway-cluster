@@ -2,8 +2,8 @@
 name: Docker Builds
 
 # Controls when the workflow will run
-on:
-  push:
+  on:
+    push:
       - 'master'
       - 'main'
       - 'dev'
