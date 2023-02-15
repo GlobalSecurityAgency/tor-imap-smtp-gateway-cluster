@@ -5,7 +5,7 @@ MAILGW_IMAGE=$(cat .env |grep ^MAILGW_IMAGE|cut -d"=" -f2|tail -n1)
 
 MULTITOR_IMAGE=$(cat .env |grep ^MULTITOR_IMAGE|cut -d"=" -f2|tail -n1)
 [[ -z "$MULTITOR_IMAGE" ]] && MULTITOR_IMAGE=ghcr.io/globalsecurityagency/torgw
-
+echo IMAGES: GW $MAILGW_IMAGE  "|" TOR $MULTITOR_IMAGE
 echo "$MULTITOR_IMAGE" |grep -q ghcr.io/globalsecurityagency/torgw || docker pull ghcr.io/globalsecurityagency/torgw &
 echo $MAILGW_IMAGE     |grep -q ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster || docker pull ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster & 
 wait
