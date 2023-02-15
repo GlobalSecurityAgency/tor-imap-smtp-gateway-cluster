@@ -11,6 +11,7 @@ on:
     branches:
       - 'master'
       - 'dev'
+      - 'main'
       - 'experimental'
     tags:
       - 'v*.*.*'
