@@ -1,0 +1,503 @@
+version: '3.3'
+#networks:
+#  mail:
+#    external: true
+networks:
+  default:
+    external:
+      name: services
+  mail:
+    external:
+      name: ${MAIL_NETWORK:-mail_network}
+
+
+services:
+  torgateway:
+    expose:
+      - 9050
+    hostname: torgateway
+    container_name: torgateway
+    image: ${MULTITOR_IMAGE:-ghcr.io/y0l0-os/tor-load-balancer-docker:main}
+    deploy:
+      placement:
+        constraints:
+            - "node.role==worker"
+            - "node.labels.torrunner!=manager"
+
+#    build:  multitor-nodejs/
+#    build:  multitor-torgw
+
+#    image: ${MULTITOR_IMAGE:-multitor-nodejs}
+
+#    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:2525,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.yandex.ru:465,socksport=9050"
+#    command: -j 5 -s 0.0.0.0:9050
+    networks:
+      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:19050:9050
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+#  mail:
+#    image: bytemark/smtp
+#    restart: always
+#    hostname: smtp.dyn.cloudns.cl
+#    environment:
+#      RELAY_HOST: yandextorsmtp
+#      RELAY_PORT: 2525
+#      RELAY_USERNAME: no-reply@dyn.cloudns.cl
+#      RELAY_PASSWORD: vcamiznnknkouits
+#      MAILNAME: dyn.cloudns.cl
+#      RELAY_NETS: 10.0.0.0/8;172.16.0.0/12;192.168.0.0/16
+##    ports:
+#      - 25:25
+#      - 5587:587
+#    networks:
+#      - mail
+
+  tor-expose:
+    hostname: expose.via.tor.onion
+    container_name: expose.via.tor.onion
+#    build: .
+    image: alpine
+#    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru tor.gateway.docker"
+#    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+#    command: ash -c 'apk add socat 2>&1 |grep -v -e fetch -e Install;ping -c 6 torgateway && socat -d -d tcp-listen:9050,reuseaddr,fork tcp-connect:torgateway:9050 2>&1 |grep -v -e recvmsg -e "N exit" -e forked -e "listening on" -e "opening connection to" -e "accepting connection from" -e "is at EOF" -e childdied -e forked -e'
+    command: ash -c 'apk add socat 2>&1 |grep -v -e fetch -e Install;ping -c 3 torgateway && socat tcp-listen:9050,reuseaddr,fork tcp-connect:torgateway:9050 2>&1 |grep -v "Broken pipe" '
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
+#    tmpfs:
+#      - /etc/perdition:size=5M
+    networks:
+      - mail
+    ports:
+      - ${BINDIP:-127.0.0.1}:19050:9050
+#      - ${BINDIP:-127.0.0.1}:25465:25465
+#      - ${BINDIP:-127.0.0.1}:25587:25587
+#      - ${BINDIP:-127.0.0.1}:25143:25143
+#      - ${BINDIP:-127.0.0.1}:25993:25993
+  yandex_mail_via_tor_onion:
+    hostname: yandex.mail.via.tor.onion
+    container_name: yandex.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+#    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru tor.gateway.docker"
+    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    tmpfs:
+      - /etc/perdition:size=5M
+    networks:
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:25025:25587
+#      - ${BINDIP:-127.0.0.1}:25465:25465
+#      - ${BINDIP:-127.0.0.1}:25587:25587
+#      - ${BINDIP:-127.0.0.1}:25143:25143
+#      - ${BINDIP:-127.0.0.1}:25993:25993
+  mailru_mail_via_tor_onion:
+    hostname: mailru.mail.via.tor.onion
+    container_name: mailru.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+#    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru tor.gateway.docker"
+    command: /bin/bash -c "bash /tormail_subdomains.sh 24 mail.ru torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    tmpfs:
+      - /etc/perdition:size=5M
+    networks:
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:24025:24587
+#      - ${BINDIP:-127.0.0.1}:24465:24465
+#      - ${BINDIP:-127.0.0.1}:24587:24587
+#      - ${BINDIP:-127.0.0.1}:24143:24143
+#      - ${BINDIP:-127.0.0.1}:24993:24993
+
+  emailn_mail_via_tor_onion:
+    hostname: emailn.mail.via.tor.onion
+    container_name: emailn.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 15 emailn.de torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+    deploy:
+      mode: replicated
+      replicas: 1
+      endpoint_mode: dnsrr
+    tmpfs:
+      - /etc/perdition:size=5M
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:15025:15587
+#      - ${BINDIP:-127.0.0.1}:15465:15465
+#      - ${BINDIP:-127.0.0.1}:15587:15587
+#      - ${BINDIP:-127.0.0.1}:15143:15143
+#      - ${BINDIP:-127.0.0.1}:15993:15993
+    networks:
+      - mail
+
+  mailo_mail_via_tor_onion:
+    hostname: mailo.mail.via.tor.onion
+    container_name: mailo.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 11 mailo.com torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+
+    tmpfs:
+      - /etc/perdition:size=5M
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:11025:11587
+#      - ${BINDIP:-127.0.0.1}:11465:11465
+#      - ${BINDIP:-127.0.0.1}:11587:11587
+#      - ${BINDIP:-127.0.0.1}:11143:11143
+#      - ${BINDIP:-127.0.0.1}:11993:11993
+
+  riseup_mail_via_tor_onion:
+    hostname: riseup.mail.via.tor.onion
+    container_name: riseup.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 18 riseup.net torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+
+    tmpfs:
+      - /etc/perdition:size=5M
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:18025:18587
+#      - ${BINDIP:-127.0.0.1}:18465:18465
+#      - ${BINDIP:-127.0.0.1}:18587:18587
+#      - ${BINDIP:-127.0.0.1}:18143:18143
+#      - ${BINDIP:-127.0.0.1}:18993:18993
+
+  infomaniak_mail_via_tor_onion:
+    hostname: infomaniak.mail.via.tor.onion
+    container_name: infomaniak.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 16 infomaniak.com torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+
+    tmpfs:
+      - /etc/perdition:size=5M
+
+#    volumes:
+#      - type: tmpfs
+#        tmpfs:
+#          size: 5M 
+#          o: nosuid,nodev,exec
+#        target: /etc/perdition
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:16025:16587
+#      - ${BINDIP:-127.0.0.1}:16465:16465
+#      - ${BINDIP:-127.0.0.1}:16587:16587
+#      - ${BINDIP:-127.0.0.1}:16143:16143
+#      - ${BINDIP:-127.0.0.1}:16993:16993
+
+  office365_mail_via_tor_onion:
+    hostname: office365.mail.via.tor.onion
+    container_name: office365.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-mailviaonion}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 36 outlook.office365.com torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+
+    tmpfs:
+      - /etc/perdition:size=5M
+
+#    volumes:
+#      - type: tmpfs
+#        tmpfs:
+#          size: 5M 
+#          o: nosuid,nodev,exec
+#        target: /etc/perdition
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:16025:16587
+#      - ${BINDIP:-127.0.0.1}:16465:16465
+#      - ${BINDIP:-127.0.0.1}:16587:16587
+#      - ${BINDIP:-127.0.0.1}:16143:16143
+#      - ${BINDIP:-127.0.0.1}:16993:16993
+
+
+#
+##  yandextorsmtp:
+##    hostname: yandextorsmtp
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:2525,fork OPENSSL:yandextorsmtpssl:25465,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :25587 -p smtp.yandex.ru:587 -p socks5://tor.gateway.docker:9050"
+#
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:25025:25587
+###      - ${BINDIP:-127.0.0.1}:25587:25587
+#
+#
+##  yandextorimapssl:
+##    hostname: yandextorimapssl
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.yandex.ru:993,socksport=9050"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.yandex.ru:993 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:25993:9993
+#
+##  yandextorimap:
+##    hostname: yandextorimap
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:yandextorimapssl:9993,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :25143 -p imap.yandex.ru:143 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:25143:25143
+#
+##  pepisocattor:
+##    hostname: pepisocattor
+##    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:2525,fork SOCKS4A:${BINDIP:-127.0.0.1}:smtp.pepipost.com:587,socksport=9050"
+##    networks:
+##      - mail
+###    ports:
+##      - 5587:2525
+#
+#
+##  emailntorsmtpssl:
+##    hostname: emailntorsmtpssl
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1525,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.emailn.de:465,socksport=9050"
+# #   command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15465 -p smtp.emailn.de:465 -p socks5://tor.gateway.docker:9050"
+#  #  networks:
+# #     - mail
+# #   ports:
+###      - ${BINDIP:-127.0.0.1}:15465:15465
+#
+##  emailntorsmtp:
+##    hostname: emailntorsmtp
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1525,fork OPENSSL:emailntorsmtpssl:15465,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15587 -p smtp.emailn.de:587 -p socks5://tor.gateway.docker:9050"
+##
+##    networks:
+###      - mail
+# #   ports:
+###      - ${BINDIP:-127.0.0.1}:15025:15587
+###      - ${BINDIP:-127.0.0.1}:15587:15587
+#
+##  emailntorimapssl:
+##    hostname: emailntorimapssl
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.emailn.de:993,socksport=9050"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.emailn.de:993 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:15993:9993
+#
+##  emailntorimap:
+##    hostname: emailntorimap
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:emailntorimapssl:9993,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15143 -p imap.emailn.de:143 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:15143:15143
+#
+##  mailotorsmtpssl:
+##    hostname: mailotorsmtpssl
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1125,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.mailo.com:465,socksport=9050"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11465 -p smtp.mailo.com:465 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:11465:11465
+##
+##  mailotorsmtp:
+##    hostname: mailotorsmtp
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1125,fork OPENSSL:mailotorsmtpssl:11465,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11587 -p smtp.mailo.com:587 -p socks5://tor.gateway.docker:9050"
+#
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:11025:11587
+###      - ${BINDIP:-127.0.0.1}:11587:11587
+#
+##  mailotorimapssl:
+##    hostname: mailotorimapssl
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.mailo.com:993,socksport=9050"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.mailo.com:993 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:11993:9993
+#
+##  mailotorimap:
+##    hostname: mailotorimap
+##    build: .
+###    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:mailotorimapssl:9993,verify=0"
+##    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11143 -p imap.mailo.com:143 -p socks5://tor.gateway.docker:9050"
+##    networks:
+##      - mail
+###    ports:
+###      - ${BINDIP:-127.0.0.1}:11143:11143
+#
+#
+#  emailntorsmtpssl:
+#    hostname: emailntorsmtpssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1525,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.emailn.de:465,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15465 -p smtp.emailn.de:465 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:15465:15465
+#
+#  emailntorsmtp:
+#    hostname: emailntorsmtp
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1525,fork OPENSSL:emailntorsmtpssl:15465,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15587 -p smtp.emailn.de:587 -p socks5://tor.gateway.docker:9050"
+#
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:15025:15587
+##      - ${BINDIP:-127.0.0.1}:15587:15587
+#
+#  emailntorimapssl:
+#    hostname: emailntorimapssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.emailn.de:993,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.emailn.de:993 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:15993:9993
+#
+#  emailntorimap:
+#    hostname: emailntorimap
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:emailntorimapssl:9993,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :15143 -p imap.emailn.de:143 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:15143:15143
+#
+#  mailotorsmtpssl:
+#    hostname: mailotorsmtpssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1125,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.mailo.com:465,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11465 -p smtp.mailo.com:465 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:11465:11465
+#
+#  mailotorsmtp:
+#    hostname: mailotorsmtp
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1125,fork OPENSSL:mailotorsmtpssl:11465,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11587 -p smtp.mailo.com:587 -p socks5://tor.gateway.docker:9050"
+#
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:11025:11587
+##      - ${BINDIP:-127.0.0.1}:11587:11587
+#
+#  mailotorimapssl:
+#    hostname: mailotorimapssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.mailo.com:993,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.mailo.com:993 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:11993:9993
+#
+#  mailotorimap:
+#    hostname: mailotorimap
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:mailotorimapssl:9993,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :11143 -p imap.mailo.com:143 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:11143:11143
+#
+#  riseuptorsmtpssl:
+#    hostname: riseuptorsmtpssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1825,fork  SOCKS5:${BINDIP:-127.0.0.1}:smtp.riseup.net:465,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :18465 -p smtp.riseup.net:465 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:18465:18465
+#
+#  riseuptorsmtp:
+#    hostname: riseuptorsmtp
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:1825,fork OPENSSL:riseuptorsmtpssl:18465,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :18587 -p smtp.riseup.net:587 -p socks5://tor.gateway.docker:9050"
+#
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:18025:18587
+##      - ${BINDIP:-127.0.0.1}:18587:18587
+#
+#  riseuptorimapssl:
+#    hostname: riseuptorimapssl
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork  SOCKS5:${BINDIP:-127.0.0.1}:imap.riseup.net:993,socksport=9050"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :9993 -p imap.riseup.net:993 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:18993:9993
+#
+#  riseuptorimap:
+#    hostname: riseuptorimap
+#    build: .
+##    command: /bin/ash -c "echo apk --no-cache add socat ; socat  TCP-LISTEN:9993,fork OPENSSL:riseuptorimapssl:9993,verify=0"
+#    command: /bin/ash -c "echo apk --no-cache add socat ; /bridge -b :18143 -p imap.riseup.net:143 -p socks5://tor.gateway.docker:9050"
+#    networks:
+#      - mail
+##    ports:
+##      - ${BINDIP:-127.0.0.1}:18143:18143
+#
