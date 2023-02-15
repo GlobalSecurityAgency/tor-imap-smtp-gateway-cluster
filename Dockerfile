@@ -8,8 +8,8 @@ RUN wget -c "https://gitlab.com/the-foundation/avahi-browse-to-hostfile/-/raw/ma
 
 #RUN uname -a |grep aarch64 || go get -u -v github.com/wzshiming/bridge/cmd/bridge
 RUN (uname -a |grep -e 386 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_386 -O /bridge) ) || true 
-RUN (uname -a |grep -e armv6 -e armhf -e armv7l || (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_arm -O /bridge)  ) || true 
-RUN (uname -a |grep -e amd64 -e x86_64 || (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_amd64 -O /bridge)  ) || true 
+RUN (uname -a |grep -e armv6 -e armhf -e armv7l && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_arm -O /bridge)  ) || true 
+RUN (uname -a |grep -e amd64 -e x86_64 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_amd64 -O /bridge)  ) || true 
 RUN (uname -a |grep aarch64 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.8.9/bridge_linux_arm64 -O /bridge) ) || true 
 
 RUN chmod +x /bridge
