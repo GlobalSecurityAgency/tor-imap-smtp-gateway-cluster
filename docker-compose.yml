@@ -17,7 +17,9 @@ services:
       - 9050
     hostname: torgateway
     container_name: torgateway
-    image: ${MULTITOR_IMAGE:-ghcr.io/y0l0-os/tor-load-balancer-docker:main}
+    #image: ${MULTITOR_IMAGE:-ghcr.io/y0l0-os/tor-load-balancer-docker:main}
+    image: ${MULTITOR_IMAGE:-ghcr.io/globalsecurityagency/torgw}
+
     deploy:
       placement:
         constraints:
@@ -85,7 +87,7 @@ services:
     hostname: yandex.mail.via.tor.onion
     container_name: yandex.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
 #    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru tor.gateway.docker"
     command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru torgateway"
 #    extra_hosts:
@@ -108,7 +110,7 @@ services:
     hostname: mailru.mail.via.tor.onion
     container_name: mailru.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
 #    command: /bin/bash -c "bash /tormail_subdomains.sh 25 yandex.ru tor.gateway.docker"
     command: /bin/bash -c "bash /tormail_subdomains.sh 24 mail.ru torgateway"
 #    extra_hosts:
@@ -132,7 +134,7 @@ services:
     hostname: emailn.mail.via.tor.onion
     container_name: emailn.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
     command: /bin/bash -c "bash /tormail_subdomains.sh 15 emailn.de torgateway"
 #    extra_hosts:
 #      - host.docker.internal:tor-gateway.host
@@ -155,7 +157,7 @@ services:
     hostname: mailo.mail.via.tor.onion
     container_name: mailo.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
     command: /bin/bash -c "bash /tormail_subdomains.sh 11 mailo.com torgateway"
 #    extra_hosts:
 #      - host.docker.internal:tor-gateway.host
@@ -175,7 +177,7 @@ services:
     hostname: riseup.mail.via.tor.onion
     container_name: riseup.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
     command: /bin/bash -c "bash /tormail_subdomains.sh 18 riseup.net torgateway"
 #    extra_hosts:
 #      - host.docker.internal:tor-gateway.host
@@ -195,7 +197,7 @@ services:
     hostname: infomaniak.mail.via.tor.onion
     container_name: infomaniak.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
     command: /bin/bash -c "bash /tormail_subdomains.sh 16 infomaniak.com torgateway"
 #    extra_hosts:
 #      - host.docker.internal:tor-gateway.host
@@ -222,7 +224,7 @@ services:
     hostname: office365.mail.via.tor.onion
     container_name: office365.mail.via.tor.onion
     build: .
-    image: ${MAILGW_IMAGE:-mailviaonion}
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
     command: /bin/bash -c "bash /tormail_subdomains.sh 36 outlook.office365.com torgateway"
 #    extra_hosts:
 #      - host.docker.internal:tor-gateway.host
