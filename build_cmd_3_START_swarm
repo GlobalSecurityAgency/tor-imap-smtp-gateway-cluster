@@ -1,1 +1,2 @@
+#!/bin/bash
 (sed 's/^/export /g' .env;echo docker stack deploy --compose-file docker-compose.yml torgw)|bash
