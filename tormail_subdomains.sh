@@ -7,11 +7,13 @@ PREFIX=$1;
 ## use smtp and imap subdomains if they exist
 
 IMAPTARGET=$2
+echo "testing imap.$2"
 testme=imap.$2
 foundit=no
 ( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done  |grep ^Address  ) && foundit=yes
 echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
+echo "testing smtp.$2"
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
@@ -25,7 +27,7 @@ TORHOST=$3
 
 #ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" 
 myip=$(ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" )
-echo "START: PREFIX=$1; IMAPTARGET=imap.$2; SMTPTARGET=smtp.$2; TORHOST=$3 LISTEN=$myip"
+echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
 echo '[server]
 use-ipv4=yes
