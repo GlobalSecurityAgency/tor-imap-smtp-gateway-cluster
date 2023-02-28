@@ -9,14 +9,14 @@ PREFIX=$1;
 IMAPTARGET=$2
 testme=imap.$2
 foundit=no
-(nslookup -type=A $testme |tail -n+3;nslookup -type=AAAA $testme |tail -n3) |grep ^Address  && foundit=yes
-ecoh "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done  |grep ^Address  ) && foundit=yes
+echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
-(nslookup -type=A $testme |tail -n+3;nslookup -type=AAAA $testme |tail -n3) |grep ^Address  && foundit=yes
-ecoh "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done  |grep ^Address  ) && foundit=yes
+echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 
 
 TORHOST=$3
@@ -79,7 +79,7 @@ done
 ####
 
 for  rport in 025:587 587:587 465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v '"remote_address": "127.0.0.1:';sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
   for LISTENIP in $myip;do 
 
     ( while (true) ;do  
@@ -94,7 +94,11 @@ done
 
 touch /tmp/null;
 
+test -e /usr/var/run/perdition.imap4s || mkdir  -p /usr/var/run/perdition.imap4s ;
+
+ 
 cd /etc/perdition
+
 
 test -e perdition.crt.pem || (
 echo "generating dhparam"
@@ -163,7 +167,7 @@ done ) &
 
 done
 
-
+echo "BOOT:COMPLETED"
 
 ##the main() ping
 
@@ -190,8 +194,8 @@ done
 wait
 
 
- mkdir  -p /usr/var/run/perdition.imap4s ;
- cat dhparams.pem >> /etc/perdition/perdition.crt.pem );
+
+# cat dhparams.pem >> /etc/perdition/perdition.crt.pem );
 # screen -dmS perditionsocat socat TCP-LISTEN:$PORT,bind=${myip},fork,reuseaddr TCP-CONNECT:127.0.0.1:$PORT;
 #screen -dmS torsocat socat TCP-LISTEN:9050,fork,reuseaddr TCP-CONNECT:$TORGW:9050;
 # perdition.imap4s --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 192.168.25.25 --outgoing_port 143 --explicit_domain mail.domain.lan --listen_port $PORT --bind_address=127.0.0.1:$PORT -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
