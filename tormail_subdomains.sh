@@ -177,7 +177,7 @@ sleep 60 ;
 while (true);do 
   for LISTENIP in $myip;do 
 
-echo "pinging"$(
+echo $(date -u )"pinging"$(
 echo  "|smtp:25 :"  ;curl -kLv  smtp://${LISTENIP}:${PREFIX}025 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 echo  "|smtp:587:"  ;curl -kLv  smtp://${LISTENIP}:${PREFIX}587 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 echo  "|smtp:465:"  ;curl -kLv smtps://${LISTENIP}:${PREFIX}465 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
