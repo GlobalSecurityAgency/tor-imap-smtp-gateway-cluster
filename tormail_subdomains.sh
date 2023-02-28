@@ -79,7 +79,7 @@ done
 ####
 
 for  rport in 025:587 587:587 465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v '"remote_address": "127.0.0.1:';sleep 2;done ) &
   for LISTENIP in $myip;do 
 
     ( while (true) ;do  
@@ -194,5 +194,5 @@ wait
  cat dhparams.pem >> /etc/perdition/perdition.crt.pem );
 # screen -dmS perditionsocat socat TCP-LISTEN:$PORT,bind=${myip},fork,reuseaddr TCP-CONNECT:127.0.0.1:$PORT;
 #screen -dmS torsocat socat TCP-LISTEN:9050,fork,reuseaddr TCP-CONNECT:$TORGW:9050;
-# perdition.imap4s --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 192.168.26.242 --outgoing_port 143 --explicit_domain eb.be.eu.org  --listen_port $PORT --bind_address=127.0.0.1:$PORT -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
+# perdition.imap4s --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 192.168.25.25 --outgoing_port 143 --explicit_domain mail.domain.lan --listen_port $PORT --bind_address=127.0.0.1:$PORT -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 
