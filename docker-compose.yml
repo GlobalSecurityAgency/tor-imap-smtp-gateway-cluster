@@ -23,8 +23,8 @@ services:
     deploy:
       placement:
         constraints:
-            - "node.role==worker"
-            - "node.labels.torrunner!=manager"
+            - "node.role!=worker"
+            - "node.labels.torrunner==true"
 
 #    build:  multitor-nodejs/
 #    build:  multitor-torgw
