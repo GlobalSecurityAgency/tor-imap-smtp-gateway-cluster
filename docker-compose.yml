@@ -241,13 +241,64 @@ services:
     networks: 
       - mail
 #    ports:
-#      - ${BINDIP:-127.0.0.1}:16025:16587
-#      - ${BINDIP:-127.0.0.1}:16465:16465
-#      - ${BINDIP:-127.0.0.1}:16587:16587
-#      - ${BINDIP:-127.0.0.1}:16143:16143
-#      - ${BINDIP:-127.0.0.1}:16993:16993
+#      - ${BINDIP:-127.0.0.1}:36025:36587
+#      - ${BINDIP:-127.0.0.1}:36465:36465
+#      - ${BINDIP:-127.0.0.1}:36587:36587
+#      - ${BINDIP:-127.0.0.1}:36143:36143
+#      - ${BINDIP:-127.0.0.1}:36993:36993
 
+  gmail_mail_via_tor_onion:
+    hostname: gmail.mail.via.tor.onion
+    container_name: gmail.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 27 gmail.com torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
 
+    tmpfs:
+      - /etc/perdition:size=5M
+
+#    volumes:
+#      - type: tmpfs
+#        tmpfs:
+#          size: 5M 
+#          o: nosuid,nodev,exec
+#        target: /etc/perdition
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:27025:27587
+#      - ${BINDIP:-127.0.0.1}:27465:27465
+#      - ${BINDIP:-127.0.0.1}:27587:27587
+#      - ${BINDIP:-127.0.0.1}:27143:27143
+#      - ${BINDIP:-127.0.0.1}:27993:27993
+  icloud_mail_via_tor_onion:
+    hostname: icloud.mail.via.tor.onion
+    container_name: icloud.mail.via.tor.onion
+    build: .
+    image: ${MAILGW_IMAGE:-ghcr.io/globalsecurityagency/tor-imap-smtp-gateway-cluster}
+    command: /bin/bash -c "bash /tormail_subdomains.sh 49 mail.me.com torgateway"
+#    extra_hosts:
+#      - host.docker.internal:tor-gateway.host
+
+    tmpfs:
+      - /etc/perdition:size=5M
+
+#    volumes:
+#      - type: tmpfs
+#        tmpfs:
+#          size: 5M 
+#          o: nosuid,nodev,exec
+#        target: /etc/perdition
+    networks: 
+      - mail
+#    ports:
+#      - ${BINDIP:-127.0.0.1}:49025:49587
+#      - ${BINDIP:-127.0.0.1}:49465:49465
+#      - ${BINDIP:-127.0.0.1}:49587:49587
+#      - ${BINDIP:-127.0.0.1}:49143:49143
+#      - ${BINDIP:-127.0.0.1}:49993:49993
 #
 ##  yandextorsmtp:
 ##    hostname: yandextorsmtp
