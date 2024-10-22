@@ -62,7 +62,7 @@ sleepint=2
 
 echo "NO" > /dev/shm/READY
 
-[[ -z "$TORHOST" ]] || ( nslookup "$TORHOST" 127.0.0.11 &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
 
@@ -75,7 +75,7 @@ sleepint=$(($sleepint*2))
 sleep $sleepint
 [[  $sleepint -gt 128 ]] && sleepint=4
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
-[[ -z "$TORHOST" ]] || ( nslookup "$TORHOST" 127.0.0.11 &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 done
 
 ####
@@ -127,7 +127,7 @@ for rport in 993:993 ;do
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #      perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 93 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 93 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v Connect:
+      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 93 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
 sleep 1;
 done ) &
 
@@ -158,7 +158,7 @@ for rport in 143:143 ;do
      /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
 ( while (true) ;do  
 echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-      perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v Connect:
+      perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
 sleep 1;
 done ) &
 
