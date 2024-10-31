@@ -13,7 +13,7 @@ TORHOST=$3
 
 [[ -z "$TORHOST" ]] && TORHOST=tor.local
 
-socat tcp-listen:9050,fork,reuseaddr tcp-connect:$TORHOST:9050 2>&1 |sed 's/TORCAT: /g'|grep -v "Address in use" &
+socat tcp-listen:9050,fork,reuseaddr tcp-connect:$TORHOST:9050 2>&1 |sed 's/^/TORCAT: /g'|grep -v "Address in use" &
 
 #ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" 
 myip=$(ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" )
@@ -30,14 +30,14 @@ IMAPTARGET=$2
 echo "testing imap.$2"
 testme=imap.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver 2>/dev/null|tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
 echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
 echo "testing smtp.$2"
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver 2>/dev/null|tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
 echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
