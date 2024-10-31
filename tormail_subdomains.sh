@@ -45,6 +45,7 @@ bash /avahi-to-hosts.sh --repeat   &
 dnsmasq  -f -d --strict-order --no-resolv  --server "127.0.0.11#53" --addn-hosts=/etc/hosts.mdns 2>&1 |sed 's/^/DNSMQ:/g'  &
 echo nameserver 127.0.0.1 > /etc/resolv.conf
 
+sleep 5;
 
 ## use smtp and imap subdomains if they exist
 
@@ -154,7 +155,11 @@ for rport in 993:993 ;do
 
 ( while (true) ;do  
 LISTEINIP=127.0.0.1
-rport=93:993
+#rport=193:993
+#rport=193:${PREFIX}993
+rport=193:999
+## socat will send sni for us 
+
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server $IMAPTARGET --outgoing_port ${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #      perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
@@ -173,6 +178,8 @@ echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 
 sleep 1;
 done ) &
 
+
+
 for rport in 1143:1144 143:1144 93:193 993:193;do 
 nginx_confgen "$rport"
 nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
@@ -186,6 +193,7 @@ nginx -t && nginx -s reload
 (
 ## port 999 will accept unencrypted connections and send them via ssl 
 ( while (true) ;do  
+rport=999:193
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
      echo "RUN:" TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 
  socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:1143,snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
