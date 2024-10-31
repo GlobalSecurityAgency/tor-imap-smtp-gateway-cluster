@@ -3,24 +3,8 @@
 #echo nameserver 1.1.1.1 > /etc/resolv.conf
 PREFIX=$1;
 
-rm /etc/avahi/services/sftp-ssh.service /etc/avahi/services/ssh.service  &
+rm /etc/avahi/service/sftp-ssh.service  /etc/avahi/service/ssh.service  &>/dev/null &
 
-
-## use smtp and imap subdomains if they exist
-
-IMAPTARGET=$2
-echo "testing imap.$2"
-testme=imap.$2
-foundit=no
-( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes  
-echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
-
-echo "testing smtp.$2"
-SMTPTARGET=$2;
-testme=smtp.$2
-foundit=no
-( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes
-echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 
 
 TORHOST=$3
@@ -60,6 +44,25 @@ avahi-daemon -f /etc/avahi/avahi-daemon.conf  2>&1 |sed 's/^/AVAHI:/g' &
 bash /avahi-to-hosts.sh --repeat   &
 dnsmasq  -f -d --strict-order --no-resolv  --server "127.0.0.11#53" --addn-hosts=/etc/hosts.mdns 2>&1 |sed 's/^/DNSMQ:/g'  &
 echo nameserver 127.0.0.1 > /etc/resolv.conf
+
+
+## use smtp and imap subdomains if they exist
+
+IMAPTARGET=$2
+echo "testing imap.$2"
+testme=imap.$2
+foundit=no
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes  
+echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
+
+echo "testing smtp.$2"
+SMTPTARGET=$2;
+testme=smtp.$2
+foundit=no
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes
+echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
+
+
 ## end bootstrap
 
 sleepint=2
@@ -85,7 +88,7 @@ done
 
 
 while (true);do 
-    nginx -g 'daemon off;';sleep 5;
+    nginx -g 'daemon off;' grep -v -e '] TCP 200  ' ;sleep 5;
 done & 
 
 nginx_confgen() { 
@@ -97,8 +100,8 @@ echo '
         proxy_pass        127.0.0.1:'${myports/*:/}';
         proxy_buffer_size 16k;
         access_log /dev/stdout main;
+        proxy_ignore_client_abort;
     }
-
         
 ' > /etc/nginx/stream.d/${myports//:/_}.conf
 
@@ -173,8 +176,9 @@ done ) &
 
 for rport in 1143:1144 143:1144 93:193 993:193;do 
 nginx_confgen "$rport"
-nginx -t && nginx -s reload 
+nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
 done 
+nginx -t && nginx -s reload 
 
 ) & ## end perdition
 
