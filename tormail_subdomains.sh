@@ -3,6 +3,7 @@
 #echo nameserver 1.1.1.1 > /etc/resolv.conf
 PREFIX=$1;
 
+rm /etc/avahi/services/sftp-ssh.service /etc/avahi/services/ssh.service  &
 
 
 ## use smtp and imap subdomains if they exist
@@ -158,6 +159,8 @@ echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --conne
 sleep 1;
 done ) &
 
+done 
+
 ( while (true) ;do  
 echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
       perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
@@ -170,7 +173,6 @@ nginx -t && nginx -s reload
 done 
 
 ) & ## end perdition
-
 
 
 ## SOCAT

@@ -12,6 +12,7 @@ RUN (uname -a |grep aarch64 && (wget -c https://github.com/wzshiming/bridge/rele
 RUN apk add --no-cache socat bash perdition  openssl curl avahi avahi-tools dbus dnsmasq  nginx nginx-mod-stream
 RUN wget -c "https://gitlab.com/the-foundation/avahi-browse-to-hostfile/-/raw/master/avahi-to-hosts.sh?inline=false" -O /avahi-to-hosts.sh
 RUN grep avahi_tohosts /avahi-to-hosts.sh
+RUN rm /etc/avahi/services/sftp-ssh.service /etc/avahi/services/ssh.service 
 
 #RUN uname -a |grep aarch64 || go get -u -v github.com/wzshiming/bridge/cmd/bridge
 
