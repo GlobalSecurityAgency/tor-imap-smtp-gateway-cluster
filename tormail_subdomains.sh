@@ -5,8 +5,10 @@ PREFIX=$1;
 
 rm /etc/avahi/service/sftp-ssh.service  /etc/avahi/service/ssh.service  &>/dev/null &
 
-
-
+rm /var/log/nginx/access.log  /var/log/nginx/error.log   /var/log/nginx/stream.log  &>/dev/null &
+ln -s /dev/stdout /var/log/nginx/access.log 
+ln -s /dev/stdout /var/log/nginx/stream.log 
+ln -s /dev/stderr /var/log/nginx/error.log
 TORHOST=$3
 
 [[ -z "$TORHOST" ]] && TORHOST=tor.local
