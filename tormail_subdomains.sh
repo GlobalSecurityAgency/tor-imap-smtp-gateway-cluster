@@ -142,9 +142,10 @@ ls -1   /etc/perdition/perdition.crt.pem || (
                                   openssl dhparam -out /etc/perdition/dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log ) &
   ls -1 /etc/perdition/perdition.key.pem || (   echo "generating cert and key"
                                  ( echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo) | openssl req -new -x509 -nodes -out /etc/perdition/perdition.crt.pem -keyout /etc/perdition/perdition.key.pem -newkey rsa:4096 -days 3650 &>/dev/shm/sslcert.log
-                                 cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem
+                                 
                                ) &
   wait 
+  grep "DH PARAMETERS" /etc/perdition/perdition.crt.pem || ( cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem )
 )
 echo "FORK PERDITIONs"
 ## imaps perdition
