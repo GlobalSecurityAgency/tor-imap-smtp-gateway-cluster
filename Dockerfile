@@ -2,7 +2,7 @@
 #RUN /bin/ash -c "apk add gcc automake autoconf git build-base readline-dev linux-headers openssl-dev;git clone https://github.com/runsisi/socat.git;cd socat;autoreconf -i;./configure ;make -j3 socat;cp socat /usr/bin;apk del gcc automake git build-base linux-headers openssl-dev automake autoconf"
 #FROM golang:1.17-alpine
 FROM alpine
-RUN apk add --no-cache wget 
+#RUN apk add --no-cache wget 
 
 RUN (uname -a |grep -e 386 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.11.1/bridge_linux_386 -O /bridge) ) || true 
 RUN (uname -a |grep -e armv6 -e armhf -e armv7l && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.11.1/bridge_linux_arm -O /bridge)  ) || true 
