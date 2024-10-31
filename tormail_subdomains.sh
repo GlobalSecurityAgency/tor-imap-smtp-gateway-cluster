@@ -88,7 +88,7 @@ done
 
 
 while (true);do 
-    nginx -g 'daemon off;' grep -v -e '] TCP 200  ' ;sleep 5;
+    nginx -g 'daemon off;' | grep -v -e '] TCP 200  ' ;sleep 5;
 done & 
 
 nginx_confgen() { 
