@@ -193,8 +193,8 @@ nginx -t && nginx -s reload
 ( while (true) ;do  
 rport=999:${PREFIX}993
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
-     echo "RUN:" TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 
- socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:1143,snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+     echo "RUN:" TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},snihost=$IMAPTARGET,verify=0 
+ socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
 sleep 1;
 done ) &
 
