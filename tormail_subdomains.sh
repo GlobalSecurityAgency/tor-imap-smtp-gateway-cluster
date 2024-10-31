@@ -11,7 +11,7 @@ TORHOST=$3
 
 [[ -z "$TORHOST" ]] && TORHOST=tor.local
 
-socat tcp-listen:9050,fork,reuseaddr tcp-connect:$TORHOST:9050 &
+socat tcp-listen:9050,fork,reuseaddr tcp-connect:$TORHOST:9050 2>&1 |sed 's/TORCAT: /g'|grep -v "Address in use" &
 
 #ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" 
 myip=$(ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" )
@@ -28,14 +28,14 @@ IMAPTARGET=$2
 echo "testing imap.$2"
 testme=imap.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver 2>/dev/null|tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
 echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
 echo "testing smtp.$2"
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver 2>/dev/null|tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
 echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
@@ -72,17 +72,16 @@ echo "NO" > /dev/shm/READY
 
 [[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 
-grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
+grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
 
-while (cat /dev/shm/READY 2>/dev/null |grep ^YES$ |wc -l |grep ^0$ );do
-echo "NO AVAHI HOSTS DISCOVERED ..waiting $sleepint s"
-echo "CURRENT AVAHI HOSTS:"$(cut -d" " -f1 /etc/hosts.mdns 2>/dev/null)
+while (cat /dev/shm/READY 2>/dev/null |grep ^YES$ |wc -l |grep -q ^0$ );do
+echo "HOST DISCOVERY.. ( waiting $sleepint s )CURRENT AVAHI HOSTS:"$(cut -d" " -f1 /etc/hosts.mdns 2>/dev/null)
 
 sleepint=$(($sleepint*2))
 [[ -z "$sleepint" ]] && sleepint=2
 sleep $sleepint
 [[  $sleepint -gt 128 ]] && sleepint=4
-grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
+grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
 [[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 done
 
@@ -136,8 +135,7 @@ cd /etc/perdition
 
 
 test -e perdition.crt.pem || (
-echo "generating dhparam"
-  test -e dhparams.pem      || openssl dhparam -out dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log &
+  test -e dhparams.pem      ||  ( echo "generating dhparam" ;openssl dhparam -out dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log ) &
 echo "generating cert and key"
   test -e perdition.key.pem || (
    ( echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo) | openssl req -new -x509 -nodes -out perdition.crt.pem -keyout perdition.key.pem -newkey rsa:4096 -days 3650 &>/dev/shm/sslcert.log
@@ -193,7 +191,7 @@ nginx -t && nginx -s reload
 (
 ## port 999 will accept unencrypted connections and send them via ssl 
 ( while (true) ;do  
-rport=999:193
+rport=999:${PREFIX}993
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
      echo "RUN:" TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 
  socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:1143,snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
