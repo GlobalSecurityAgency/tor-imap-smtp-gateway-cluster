@@ -4,7 +4,6 @@
 PREFIX=$1;
 
 
-
 ## use smtp and imap subdomains if they exist
 
 IMAPTARGET=$2
@@ -25,8 +24,6 @@ echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 TORHOST=$3
 
 [[ -z "$TORHOST" ]] && TORHOST=tor.local
-
-socat tcp-listen:9050,fork,reuseaddr tcp-connect:$TORHOST:9050 &
 
 #ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" 
 myip=$(ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" )
@@ -65,7 +62,7 @@ sleepint=2
 
 echo "NO" > /dev/shm/READY
 
-[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
 
@@ -78,51 +75,25 @@ sleepint=$(($sleepint*2))
 sleep $sleepint
 [[  $sleepint -gt 128 ]] && sleepint=4
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep ^0$ || ( echo "YES" >   /dev/shm/READY)
-[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
 done
 
+####
 
-
-while (true);do 
-    nginx -g 'daemon off;';sleep 5;
-done & 
-
-nginx_confgen() { 
-	myports=$1
-	
-echo '
-    server {
-        listen           '${myports/:*/}' ;
-        proxy_pass        127.0.0.1:'${myports/*:/}';
-        proxy_buffer_size 16k;
-        access_log /dev/stdout main;
-    }
-
-        
-' > /etc/nginx/stream.d/${myports//:/_}.conf
-
-echo -n ; } ; 
-
-## bridge 
-
-(
-
-## smtp bridge
-#for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-for  rport in 587:587 465:465;do 
+for  rport in 025:587 587:587 465:465;do 
   ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
+  for LISTENIP in $myip;do 
+
+    ( while (true) ;do  
+     echo "RUN:" socat TCP-LISTEN:${PREFIX}${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:127.0.0.1:${rport/:*/} 
+      socat TCP-LISTEN:${PREFIX}${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:127.0.0.1:${rport/:*/} 2>&1|sed 's/^/socat_'$rport' : /g';
+      sleep 1;
+     done ) &
+   done
 done
-
-#for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
-#nginx_confgen "$rport"
-#nginx -t && nginx -s reload 
-#done 
-##nginx -t && nginx -s reload 
-
-) #end bridge
 
 ##perdition
-(
+
 touch /tmp/null;
 
 test -e /usr/var/run/perdition.imap4s || mkdir  -p /usr/var/run/perdition.imap4s ;
@@ -141,7 +112,7 @@ echo "generating cert and key"
   wait 
 cat dhparams.pem >> perdition.crt.pem
 )
-echo "FORK PERDITIONs"
+
 ## imaps perdition
 for rport in 993:993 ;do
 #( while (true) ;do   /bridge -b :${PREFIX}${rport/:*/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
@@ -160,34 +131,43 @@ echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --conne
 sleep 1;
 done ) &
 
+
+( while (true) ;do  
+#socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:127.0.0.1:${rport/:*/} 2>&1|sed 's/^/socat_'$rport' : /g';
+socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:$LISTENIP:93 2>&1|sed 's/^/socat_'$rport' : /g';
+sleep 1;
+done ) &
+
+
+( while (true) ;do  
+# socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+     echo "RUN:" socat TCP-LISTEN:${PREFIX}${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:127.0.0.1:${rport/:*/} 
+ socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:${LISTENIP}:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+sleep 1;
+done ) &
+
+done ##end lstenip
+
+done
+
+## imap perdition
+for rport in 143:143 ;do
+#( while (true) ;do   /bridge -b :${PREFIX}${rport/:*/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
+
+( while (true) ;do   
+     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
 ( while (true) ;do  
 echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
       perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1143 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
 sleep 1;
 done ) &
 
-for rport in 143:1143 993:93;do 
-nginx_confgen "$rport"
-nginx -t && nginx -s reload 
-done 
-
-) ## end perdition
-
-
-
-## SOCAT
-(
-## port 999 will accept unencrypted connections and send them via ssl 
 ( while (true) ;do  
-# socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
-     echo "RUN:" TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 
- socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:1143,snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+ socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr TCP-CONNECT:127.0.0.1:1143 2>&1|sed 's/^/socat_'$rport' : /g';
 sleep 1;
 done ) &
 
-)
-
-
+done
 
 echo "BOOT:COMPLETED"
 
@@ -211,11 +191,15 @@ done
 sleep 1800
 echo 
 done
+
+#fg;fg;fg;
+#fg;fg;
 wait
+
+
 
 # cat dhparams.pem >> /etc/perdition/perdition.crt.pem );
 # screen -dmS perditionsocat socat TCP-LISTEN:$PORT,bind=${myip},fork,reuseaddr TCP-CONNECT:127.0.0.1:$PORT;
 #screen -dmS torsocat socat TCP-LISTEN:9050,fork,reuseaddr TCP-CONNECT:$TORGW:9050;
 # perdition.imap4s --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 192.168.25.25 --outgoing_port 143 --explicit_domain mail.domain.lan --listen_port $PORT --bind_address=127.0.0.1:$PORT -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-
 
