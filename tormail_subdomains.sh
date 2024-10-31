@@ -90,7 +90,7 @@ done
 
 
 while (true);do 
-    nginx -g 'daemon off;' | grep -v -e '] TCP 200  ' ;sleep 5;
+    nginx -g 'daemon off;' 2>&1 | grep -v -e '] TCP 200 ' ;sleep 5;
 done & 
 
 nginx_confgen() { 
@@ -136,14 +136,14 @@ test -e /usr/var/run/perdition.imap4s || mkdir  -p /usr/var/run/perdition.imap4s
 cd /etc/perdition
 
 
-test -e perdition.crt.pem || (
-  test -e dhparams.pem      ||  ( echo "generating dhparam" ;openssl dhparam -out dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log ) &
-echo "generating cert and key"
-  test -e perdition.key.pem || (
-   ( echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo) | openssl req -new -x509 -nodes -out perdition.crt.pem -keyout perdition.key.pem -newkey rsa:4096 -days 3650 &>/dev/shm/sslcert.log
-         ) &
+test -e /etc/perdition/perdition.crt.pem || (
+  test -e dhparams.pem      ||  ( echo "generating dhparam" ;
+                                  openssl dhparam -out /etc/perdition/dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log ) &
+  test -e perdition.key.pem || (   echo "generating cert and key"
+                                 ( echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo) | openssl req -new -x509 -nodes -out /etc/perdition/perdition.crt.pem -keyout /etc/perdition/perdition.key.pem -newkey rsa:4096 -days 3650 &>/dev/shm/sslcert.log
+                                 cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem
+                               ) &
   wait 
-cat dhparams.pem >> perdition.crt.pem
 )
 echo "FORK PERDITIONs"
 ## imaps perdition
@@ -180,7 +180,7 @@ done ) &
 
 
 
-for rport in 1143:1144 143:1144 93:193 993:193;do 
+for rport in 25:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
 nginx_confgen "$rport"
 nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
 done 
@@ -195,8 +195,8 @@ nginx -t && nginx -s reload
 ( while (true) ;do  
 rport=999:${PREFIX}993
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
-     echo "RUN:" TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
- socat TCP-LISTEN:999,fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},snihost=$IMAPTARGET,verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+     echo "RUN:"  socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
+                  socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0  2>&1|sed 's/^/socat999_'$rport' : /g';
 sleep 1;
 done ) &
 
