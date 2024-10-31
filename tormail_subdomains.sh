@@ -116,7 +116,7 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
