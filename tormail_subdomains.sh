@@ -153,7 +153,7 @@ for rport in 993:993 ;do
 #( while (true) ;do   /bridge -b :${PREFIX}${rport/:*/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
 
 ( while (true) ;do   
-     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050;sleep 2;done ) &
+     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1  |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;done ) &
 
 ( while (true) ;do  
 LISTENIP=127.0.0.1
