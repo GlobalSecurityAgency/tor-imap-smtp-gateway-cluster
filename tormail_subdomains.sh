@@ -116,7 +116,7 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
@@ -216,17 +216,20 @@ while (true);do
   for LISTENIP in $myip;do 
 
 echo $(date -u )" | CHECK: $LISTENIP |"$(
-#echo  "|smtp:25 :"  ;curl -kLv  smtp://${LISTENIP}:${PREFIX}025 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|smtp:25 :"  ;curl -kLv  smtp://${LISTENIP}:25 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|smtp:587:"  ;curl -kLv  smtp://${LISTENIP}:${PREFIX}587 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|smtp:465:"  ;curl -kLv smtps://${LISTENIP}:${PREFIX}465 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:143:"  ;curl -kLv  imap://${LISTENIP}:${PREFIX}143 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:1143:" ;curl -kLv  imap://${LISTENIP}:1143               2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:993:"  ;curl -kLv imaps://${LISTENIP}:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:193:"  ;curl -kLv imaps://${LISTENIP}:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:93:"   ;curl -kLv imaps://${LISTENIP}:93           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+#echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:${PREFIX}025 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|smtp:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|smtp:${PREFIX}587:"  ;curl -kLv  smtp://${LISTENIP}:${PREFIX}587 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|smtp:465:"           ;curl -kLv smtps://${LISTENIP}:465          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:143:"           ;curl -kLv  imap://${LISTENIP}:143          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:${PREFIX}143:"  ;curl -kLv  imap://${LISTENIP}:${PREFIX}143 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:1143:"          ;curl -kLv  imap://${LISTENIP}:1143         2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:93:"            ;curl -kLv imaps://${LISTENIP}:93           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:193:"           ;curl -kLv imaps://${LISTENIP}:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:993:"           ;curl -kLv imaps://${LISTENIP}:993          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:${PREFIX}993:"  ;curl -kLv imaps://${LISTENIP}:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 
-)
+) |tr -d '\n';echo
 done
 
 sleep 1800
