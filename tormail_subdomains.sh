@@ -136,10 +136,10 @@ test -e /usr/var/run/perdition.imap4s || mkdir  -p /usr/var/run/perdition.imap4s
 cd /etc/perdition
 
 
-test -e /etc/perdition/perdition.crt.pem || (
-  test -e dhparams.pem      ||  ( echo "generating dhparam" ;
+ls -1   /etc/perdition/perdition.crt.pem || (
+  ls -1 /etc/perdition/dhparams.pem      ||  ( echo "generating dhparam" ;
                                   openssl dhparam -out /etc/perdition/dhparams.pem -dsaparam 4096 &>/dev/shm/dhparm.log ) &
-  test -e perdition.key.pem || (   echo "generating cert and key"
+  ls -1 /etc/perdition/perdition.key.pem || (   echo "generating cert and key"
                                  ( echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo;echo) | openssl req -new -x509 -nodes -out /etc/perdition/perdition.crt.pem -keyout /etc/perdition/perdition.key.pem -newkey rsa:4096 -days 3650 &>/dev/shm/sslcert.log
                                  cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem
                                ) &
