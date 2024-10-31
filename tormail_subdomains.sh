@@ -3,6 +3,7 @@
 #echo nameserver 1.1.1.1 > /etc/resolv.conf
 PREFIX=$1;
 
+mkdir -p /var/run/dbus/ &>/dev/null
 rm /etc/avahi/service/sftp-ssh.service  /etc/avahi/service/ssh.service  &>/dev/null &
 
 rm /var/log/nginx/access.log  /var/log/nginx/error.log   /var/log/nginx/stream.log  &>/dev/null &
@@ -77,14 +78,14 @@ echo "NO" > /dev/shm/READY
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
 
 while (cat /dev/shm/READY 2>/dev/null |grep ^YES$ |wc -l |grep -q ^0$ );do
-echo "HOST DISCOVERY.. ( waiting $sleepint s )CURRENT AVAHI HOSTS:"$(cut -d" " -f1 /etc/hosts.mdns 2>/dev/null)
+echo "HOST DISCOVERY.. ( waiting $sleepint s )CURRENT AVAHI HOSTS:"$(cut -d" " -f1 /etc/hosts.mdns 2>/dev/null) 
 
 sleepint=$(($sleepint*2))
 [[ -z "$sleepint" ]] && sleepint=2
 sleep $sleepint
 [[  $sleepint -gt 128 ]] && sleepint=4
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
-[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))|grep -e bytes -e loss 
 done
 
 
@@ -114,7 +115,7 @@ echo -n ; } ;
 
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-for  rport in 587:587 465:465;do 
+for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
   ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' ;sleep 2;done ) &
 done
 
@@ -180,7 +181,7 @@ done ) &
 
 
 
-for rport in 25:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
+for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
 nginx_confgen "$rport"
 nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
 done 
