@@ -11,14 +11,14 @@ IMAPTARGET=$2
 echo "testing imap.$2"
 testme=imap.$2
 foundit=no
-( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done  |grep ^Address  ) && foundit=yes
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes  
 echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
 echo "testing smtp.$2"
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
-( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done  |grep ^Address  ) && foundit=yes
+( for nameserver in 127.0.0.11 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A $testme  $nameserver |tail -n+3;nslookup -type=AAAA $testme $nameserver |tail -n+3) ;done |sort -u |grep ^Address  ) && foundit=yes
 echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 
 
@@ -119,7 +119,7 @@ done
 #done 
 ##nginx -t && nginx -s reload 
 
-) #end bridge
+) & #end bridge
 
 ##perdition
 (
@@ -147,9 +147,7 @@ for rport in 993:993 ;do
 #( while (true) ;do   /bridge -b :${PREFIX}${rport/:*/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
 
 ( while (true) ;do   
-     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
-
-
+     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050;sleep 2;done ) &
 
 ( while (true) ;do  
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server $IMAPTARGET --outgoing_port ${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
@@ -171,7 +169,7 @@ nginx_confgen "$rport"
 nginx -t && nginx -s reload 
 done 
 
-) ## end perdition
+) & ## end perdition
 
 
 
@@ -187,7 +185,7 @@ done ) &
 
 )
 
-
+nginx -T|grep -e 25 -e 587 -e 993 -e 143 
 
 echo "BOOT:COMPLETED"
 
