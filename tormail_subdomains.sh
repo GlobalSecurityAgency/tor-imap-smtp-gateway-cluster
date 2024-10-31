@@ -100,7 +100,6 @@ echo '
         proxy_pass        127.0.0.1:'${myports/*:/}';
         proxy_buffer_size 16k;
         access_log /dev/stdout main;
-        proxy_ignore_client_abort;
     }
         
 ' > /etc/nginx/stream.d/${myports//:/_}.conf
