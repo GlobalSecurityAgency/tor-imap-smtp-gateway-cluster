@@ -302,7 +302,7 @@ done ) &
 nginx -T|grep -e 25 -e 587 -e 993 -e 143 
 cat /etc/tcpforward.yml|sed 's/PREFIX/'"${PREFIX}"'/g' > /tmp/forw.yml
 while (true);do 
-  tcpproxy -c /tmp/forw.yml 2>&1 |grep -v -e "Closing connection" -e "directing to 127.0.0.1:${PREFIX}143" -e "directing to 127.0.0.1:${PREFIX}993" $(ifconfig |grep inet|grep -v inet6|cut -dt -f2|cut -d" " -f2|sort -u |sed 's/^/-e /g')
+  tcpproxy -c /tmp/forw.yml 2>&1 |grep -v -e "Closing connection" -e "directing to 127.0.0.1:${PREFIX}143" -e "directing to 127.0.0.1:${PREFIX}993" $(ifconfig |grep inet|grep -v inet6|cut -dt -f2|cut -d" " -f2|sort -u |sed 's/^/-e /g'|sed 's/addr://g')
   sleep 2
 done & 
 sleep 2
@@ -314,7 +314,7 @@ sleep 60 ;
 while (true);do 
   for LISTENIP in $myip;do 
 
-echo ;echo " |   "$(date -u )" | CHECK: $LISTENIP |"$(
+echo $(echo " |   "$(date -u )" | CHECK: $LISTENIP |"$(
 #( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|smtp:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|smtp:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587   2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
@@ -327,7 +327,7 @@ echo ;echo " |   "$(date -u )" | CHECK: $LISTENIP |"$(
 ( echo  "|imap:993:"           ;curl -kLv imaps://${LISTENIP}:993          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|imap:${PREFIX}993:"  ;curl -kLv   imaps://127.0.0.1:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 
-) |tr -d '\n';echo
+) |tr -d '\n' )
 done
 
 sleep 1800
