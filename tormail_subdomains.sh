@@ -281,8 +281,10 @@ done ) &
 ## SOCAT
 (
 ## port 999 will accept unencrypted connections and send them via ssl  with SNI
+
+for rport in 999:${PREFIX}993 465:${PREFIX}465;do 
 ( while (true) ;do  
-rport=999:${PREFIX}993
+
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
 #    echo "RUN:"  socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
      echo "RUN:"  socat TCP-LISTEN:${rport/:*/},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
@@ -290,6 +292,8 @@ rport=999:${PREFIX}993
 
 sleep 1;
 done ) &
+
+done
 
 ## port 998 will accept encrypted connections and send them via ssl  with SNI
 ( while (true) ;do  
