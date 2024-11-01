@@ -238,7 +238,8 @@ for rport in 993:993 ;do
 LISTENIP=127.0.0.1
 #rport=193:993
 #rport=193:${PREFIX}993
-rport=193:998
+#rport=193:998
+rport=193:999
 ## socat will send sni for us 
 
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server $IMAPTARGET --outgoing_port ${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
@@ -320,7 +321,7 @@ echo -n " |< SMTP: "
 echo -n " >|< IMAP: "
 ( echo  "|i:143:"           ;curl -kLv  imap://${LISTENIP}:143             2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 ( echo  "|i:1143:"          ;curl -kLv  imap://${LISTENIP}:1143            2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
-( echo  "|i:${PREFIX}143:"  ;curl -kLv    imap://127.0.0.1:${PREFIX}143    2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
+( echo  "|i:${PREFIX}143:"  ;curl -kLv  imap://127.0.0.1:${PREFIX}143      2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 ( echo  "|i:93:"            ;curl -kLv imaps://${LISTENIP}:93              2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 ( echo  "|i:193:"           ;curl -kLv   imaps://127.0.0.1:193             2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 ( echo  "|i:993:"           ;curl -kLv imaps://${LISTENIP}:993             2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
