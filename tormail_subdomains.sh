@@ -33,10 +33,7 @@ mail {
     ssl_session_timeout 10m;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;  
-      proxy_pass_error_message on;
       imap_capabilities "IMAP4rev1" "UIDPLUS" "IDLE" "LITERAL +" "QUOTA";
-
-
 	   proxy_pass_error_message on;
 	   include /etc/nginx/mail.d/*.conf ;
 	   }
