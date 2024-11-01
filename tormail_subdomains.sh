@@ -182,7 +182,8 @@ done ) &
 
 
 
-for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
+#for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
+for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:999 993:193;do 
 nginx_confgen "$rport"
 nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
 done 
@@ -225,9 +226,9 @@ echo  "|imap:143:"           ;curl -kLv  imap://${LISTENIP}:143          2>&1 |g
 echo  "|imap:${PREFIX}143:"  ;curl -kLv    imap://127.0.0.1:${PREFIX}143 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 echo  "|imap:1143:"          ;curl -kLv  imap://${LISTENIP}:1143         2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 echo  "|imap:93:"            ;curl -kLv imaps://${LISTENIP}:93           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:193:"           ;curl -kLv imaps://${LISTENIP}:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:193:"           ;curl -kLv   imaps://127.0.0.1:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 echo  "|imap:993:"           ;curl -kLv imaps://${LISTENIP}:993          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
-echo  "|imap:${PREFIX}993:"  ;curl -kLv imaps://${LISTENIP}:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
+echo  "|imap:${PREFIX}993:"  ;curl -kLv   imaps://127.0.0.1:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK |tr -d '\n'
 
 ) |tr -d '\n';echo
 done
