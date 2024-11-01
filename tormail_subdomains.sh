@@ -29,7 +29,7 @@ mkdir -p /etc/nginx/mail.d/
 
    echo '
 mail { 
-	ssl_session_cache   shared:SSL:10m;
+	ssl_session_cache   shared:MAILSSL:10m;
     ssl_session_timeout 10m;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
