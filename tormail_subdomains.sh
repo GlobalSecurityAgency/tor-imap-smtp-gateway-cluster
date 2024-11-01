@@ -100,6 +100,8 @@ echo "NO" > /dev/shm/READY
 
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
 
+sleep 10
+
 while (cat /dev/shm/READY 2>/dev/null |grep ^YES$ |wc -l |grep -q ^0$ );do
 echo "HOST DISCOVERY.. ( waiting $sleepint s )CURRENT AVAHI HOSTS:"$(cut -d" " -f1 /etc/hosts.mdns 2>/dev/null) 
 
