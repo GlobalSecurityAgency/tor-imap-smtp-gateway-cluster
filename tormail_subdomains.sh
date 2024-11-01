@@ -39,24 +39,7 @@ mail {
 	   
 	   ' >> /etc/nginx/nginx.conf  )
 
-sleep 10;
 
-## use smtp and imap subdomains if they exist
-
-IMAPTARGET=$2
-echo "testing imap.$2"
-testme=imap.$2
-foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
-echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
-
-echo "testing smtp.$2"
-SMTPTARGET=$2;
-testme=smtp.$2
-foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
-echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
-echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
 echo '[server]
 use-ipv4=yes
@@ -82,6 +65,26 @@ dbus-daemon --nofork --config-file=/usr/share/dbus-1/system.conf  2>&1 |sed 's/^
 sleep 5
 avahi-daemon -f /etc/avahi/avahi-daemon.conf  2>&1 |sed 's/^/AVAHI:/g' &
 
+
+
+sleep 3;
+
+## use smtp and imap subdomains if they exist
+
+IMAPTARGET=$2
+echo " CHECK: imap.$2"
+testme=imap.$2
+foundit=no
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
+echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
+
+echo " CHECK: smtp.$2"
+SMTPTARGET=$2;
+testme=smtp.$2
+foundit=no
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
+echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
+echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
 ## end bootstrap
 
@@ -150,8 +153,7 @@ echo '
         proxy_buffer_size 16k;
         access_log /dev/stdout main;
     }
-        
-' > /etc/nginx/stream.d/${myports//:/_}.conf
+    ' > /etc/nginx/stream.d/${myports//:/_}.conf
 
  )
 echo "$myproto"|grep -q imap && ( (
@@ -171,7 +173,7 @@ echo '
     proxy_set_header X-Real-IP 127.0.0.1;
     #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-For 127.0.0.1;
-    proxy_set_header X-Forwarded-Proto $scheme; 
+    proxy_set_header X-Forwarded-Proto $scheme; '
 
 echo ' } '
     
@@ -186,7 +188,7 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' &;sleep 2;done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
@@ -236,7 +238,7 @@ rport=193:999
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #      perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
+      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client" |sed 's/^/PRSSL:/g'
 sleep 1;
 done ) &
 
