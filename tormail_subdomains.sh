@@ -23,6 +23,26 @@ bash /avahi-to-hosts.sh --repeat   &
 dnsmasq  -f -d --strict-order --no-resolv  --server "127.0.0.11#53" --addn-hosts=/etc/hosts.mdns 2>&1 |sed 's/^/DNSMQ:/g'  &
 echo nameserver 127.0.0.1 > /etc/resolv.conf
 
+(grep ^mail /etc/nginx/nginx.conf  |grep -q mail.d ) || ( 
+
+
+   echo '
+worker_processes auto;
+mail { 
+	ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+	   proxy_pass_error_message on;
+	   
+	   include /etc/nginx/mail.d/*.conf 
+	   }
+	   
+	   ' >> /etc/nginx/nginx.conf  )
+
 sleep 10;
 
 ## use smtp and imap subdomains if they exist
@@ -94,9 +114,9 @@ while (true);do
     nginx -g 'daemon off;' 2>&1 | grep -v -e '] TCP 200 ' ;sleep 5;
 done & 
 
-nginx_confgen() { 
+
+nginx_confgen_tcp() { 
 	myports=$1
-	
 echo '
     server {
         listen           '${myports/:*/}' ;
@@ -106,9 +126,74 @@ echo '
     }
         
 ' > /etc/nginx/stream.d/${myports//:/_}.conf
-
 echo -n ; } ; 
 
+nginx_confgen_imap() { 
+	myports=$1
+	
+echo '            listen '${myports/:*/}' ssl;
+    server_name '$IMAPTARGET';
+
+    ssl_certificate     /etc/perdition/perdition.crt.pem;
+    ssl_certificate_key /etc/perdition/perdition.key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384";
+
+    location / {
+        proxy_pass imaps://127.0.0.1:'${myports/*:/}';
+        proxy_set_header Host $host;
+        #proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Real-IP 127.0.0.1;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For 127.0.0.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    ' > /etc/nginx/mail.d/${myports//:/_}.conf
+
+    
+echo -n ; } ; 
+
+nginx_confgen() { 
+	myports=$1
+	myssl=""
+	echo $myports|cut -d":" -f1 |grep -q -e 587$ -e 25$  &&  myssl="starttls on;"
+	echo $myports|cut -d":" -f1 |grep -q -e 587$ -e 25$  &&  myproto="smtp"
+
+	echo $myports|cut -d":" -f1 |grep -q -e 465$   &&  myssl="ssl on;"
+	echo $myports|cut -d":" -f1 |grep -q -e 465$   &&  myproto="smtps"
+	
+		
+	echo $myports|cut -d":" -f1 |grep -q -e 143$   &&  myssl="starttls on;"
+	echo $myports|cut -d":" -f1 |grep -q -e 143$   &&  myproto="imap"
+
+	
+	echo $myports|cut -d":" -f1 |grep -q -e 93$   &&  myssl="ssl on;"
+	echo $myports|cut -d":" -f1 |grep -q -e 93$   &&  myproto="imaps"
+
+	
+echo '            listen '${myports/:*/}' ;
+    server_name '$IMAPTARGET';
+    '"$myssl"'
+    ssl_certificate     /etc/perdition/perdition.crt.pem;
+    ssl_certificate_key /etc/perdition/perdition.key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384";
+
+    location / {
+        proxy_pass '"$myproto"'://127.0.0.1:'${myports/*:/}';
+        proxy_set_header Host $host;
+        #proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Real-IP 127.0.0.1;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-For 127.0.0.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    ' > /etc/nginx/mail.d/${myports//:/_}.conf
+
+    
+echo -n ; } ; 
 ## bridge 
 
 (

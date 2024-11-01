@@ -9,7 +9,7 @@ RUN (uname -a |grep -e armv6 -e armhf -e armv7l && (wget -c https://github.com/w
 RUN (uname -a |grep -e amd64 -e x86_64 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.11.1/bridge_linux_amd64 -O /bridge)  ) || true 
 RUN (uname -a |grep aarch64 && (wget -c https://github.com/wzshiming/bridge/releases/download/v0.11.1/bridge_linux_arm64 -O /bridge) ) || true 
 
-RUN apk add --no-cache socat bash perdition  openssl curl avahi avahi-tools dbus dnsmasq  nginx nginx-mod-stream
+RUN apk add --no-cache socat bash perdition  openssl curl avahi avahi-tools dbus dnsmasq  nginx nginx-mod-stream nginx-mod-mail
 RUN wget -c "https://gitlab.com/the-foundation/avahi-browse-to-hostfile/-/raw/master/avahi-to-hosts.sh?inline=false" -O /avahi-to-hosts.sh
 RUN grep avahi_tohosts /avahi-to-hosts.sh
 RUN rm /etc/avahi/services/sftp-ssh.service /etc/avahi/services/ssh.service 
