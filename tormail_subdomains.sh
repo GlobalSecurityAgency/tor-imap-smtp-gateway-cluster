@@ -222,8 +222,10 @@ ls -1   /etc/perdition/perdition.crt.pem || (
                                ) &
   wait 
   grep "DH PARAMETERS" /etc/perdition/perdition.crt.pem || ( cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem )
-  ls -1 /etc/perdition/combined.pem || ( (cat /etc/perdition/perdition.crt.pem ;cat /etc/perdition/perdition.key.pem) > /etc/perdition/combined.pem ) 
    )
+
+
+ls -1 /etc/perdition/combined.pem || ( (cat /etc/perdition/perdition.crt.pem ;cat /etc/perdition/perdition.key.pem) > /etc/perdition/combined.pem ) 
 
 echo "FORK PERDITIONs"
 ## imaps perdition
