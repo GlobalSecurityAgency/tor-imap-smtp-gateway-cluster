@@ -127,7 +127,10 @@ echo -n ; } ;
 nginx_confgen_imap() { 
 	myports=$1
 	
-echo '            listen '${myports/:*/}' ssl;
+echo '   
+    server {
+
+    listen '${myports/:*/}' ssl;
     server_name '$IMAPTARGET';
 
     ssl_certificate     /etc/perdition/perdition.crt.pem;
@@ -145,7 +148,7 @@ echo '            listen '${myports/:*/}' ssl;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    ' > /etc/nginx/mail.d/${myports//:/_}.conf
+    } ' > /etc/nginx/mail.d/${myports//:/_}.conf
 
     
 echo -n ; } ; 
