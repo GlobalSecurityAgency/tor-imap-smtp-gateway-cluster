@@ -193,7 +193,7 @@ echo -n ; } ;
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
   ( while (true) ;do   
     #/bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;
-    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$SMTPTARGET:${rport/*:/},socksport=9050 ;sleep 2
+    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$SMTPTARGET:${rport/*:/},socksport=9050 2>&1 |sed 's/^/SOCTO: '"$rport"' | /g' ;sleep 2
 
     done ) &
 done
@@ -237,7 +237,7 @@ for rport in 993:993 ;do
 
 ( while (true) ;do   
     # /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1  |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;
-    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$IMAPTARGET:${rport/*:/},socksport=9050 ;sleep 2
+    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$IMAPTARGET:${rport/*:/},socksport=9050 2>&1 |sed 's/^/SOCTO: '"$rport"' | /g';sleep 2
      done ) &
 
 ( while (true) ;do  
