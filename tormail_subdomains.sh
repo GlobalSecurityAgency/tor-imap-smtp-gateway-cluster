@@ -33,7 +33,6 @@ mail {
     ssl_session_timeout 10m;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
-    ssl_session_cache   shared:SSL:10m;
     ssl_session_timeout 10m;
     
 	   proxy_pass_error_message on;
