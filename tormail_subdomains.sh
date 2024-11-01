@@ -298,7 +298,7 @@ done ) &
 
 nginx -T|grep -e 25 -e 587 -e 993 -e 143 
 cat /etc/tcpforward.yml|sed 's/PREFIX/'${PREFIX}'/g' > /tmp/forw.yml
-tcpforward -c /tmp/forw.yml & 
+tcpproxy -c /tmp/forw.yml & 
 sleep 2
 echo "BOOT:COMPLETED"
 
