@@ -282,7 +282,7 @@ done ) &
 (
 ## port 999 will accept unencrypted connections and send them via ssl  with SNI
 
-for rport in 999:${PREFIX}993 465:${PREFIX}465;do 
+for rport in 999:${PREFIX}993;do 
 ( while (true) ;do  
 
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
