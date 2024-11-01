@@ -8,9 +8,9 @@ apps:
 - name: imap
   ports:
   - 143
-  - 1144
+  - 1143
   targets:
-  - 127.0.0.1:1143
+  - 127.0.0.1:1144
 - name: smpts
   ports:
   - 465
