@@ -312,17 +312,20 @@ while (true);do
   for LISTENIP in $myip;do 
 
 echo $(echo " |   "$(date -u )" | CHECK: $LISTENIP |"$(
-#( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|smtp:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|smtp:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587   2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|smtp:465:"           ;curl -kLv smtps://${LISTENIP}:465          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:143:"           ;curl -kLv  imap://${LISTENIP}:143          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:${PREFIX}143:"  ;curl -kLv    imap://127.0.0.1:${PREFIX}143 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:1143:"          ;curl -kLv  imap://${LISTENIP}:1143         2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:93:"            ;curl -kLv imaps://${LISTENIP}:93           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:193:"           ;curl -kLv   imaps://127.0.0.1:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:993:"           ;curl -kLv imaps://${LISTENIP}:993          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
-( echo  "|imap:${PREFIX}993:"  ;curl -kLv   imaps://127.0.0.1:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
+#( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK+ || echo ERR ) |tr -d '\n'
+echo -n "SMTP: 
+( echo  "|s:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|s:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587   2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|s:465:"           ;curl -kLv smtps://${LISTENIP}:465          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+echo -n "IMAP: 
+
+( echo  "|i:143:"           ;curl -kLv  imap://${LISTENIP}:143          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:1143:"          ;curl -kLv  imap://${LISTENIP}:1143         2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:${PREFIX}143:"  ;curl -kLv    imap://127.0.0.1:${PREFIX}143 2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:93:"            ;curl -kLv imaps://${LISTENIP}:93           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:193:"           ;curl -kLv   imaps://127.0.0.1:193          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:993:"           ;curl -kLv imaps://${LISTENIP}:993          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
+( echo  "|i:${PREFIX}993:"  ;curl -kLv   imaps://127.0.0.1:${PREFIX}993 2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo OK+ || echo ERR ) |tr -d '\n'
 
 ) |tr -d '\n' )
 done
