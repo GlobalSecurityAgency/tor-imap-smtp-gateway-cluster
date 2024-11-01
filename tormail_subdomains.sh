@@ -61,9 +61,9 @@ publish-addresses=no
 
 [rlimits]' > /etc/avahi/avahi-daemon.conf
 
-dbus-daemon --nofork --config-file=/usr/share/dbus-1/system.conf  2>&1 |sed 's/^/  DBUS:/g' &
+dbus-daemon --nofork --config-file=/usr/share/dbus-1/system.conf  2>&1 |sed 's/^/ DBUS:/g'   &
 sleep 5
-avahi-daemon -f /etc/avahi/avahi-daemon.conf  2>&1 |sed 's/^/AVAHI:/g' &
+avahi-daemon -f /etc/avahi/avahi-daemon.conf                      2>&1 |sed 's/^/AVAHI:/g'   &
 
 
 
@@ -188,7 +188,7 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' &;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
@@ -239,7 +239,7 @@ rport=193:999
 #      perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
       perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client" |sed 's/^/PRSSL:/g'
-sleep 1;
+sleep 2;
 done ) &
 
 done 
@@ -249,7 +249,7 @@ LISTENIP=127.0.0.1
 rport=1143:143
 echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1144 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
       perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1144 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
-sleep 1;
+sleep 2;
 done ) &
 
 
