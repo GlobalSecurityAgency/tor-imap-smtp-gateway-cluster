@@ -171,7 +171,10 @@ nginx_confgen() {
 	echo $myports|cut -d":" -f1 |grep -q -e 93$   &&  myproto="imaps"
 
 	
-echo '            listen '${myports/:*/}' ;
+echo ' 
+ server {
+
+     listen '${myports/:*/}' ;
     server_name '$IMAPTARGET';
     '"$myssl"'
     ssl_certificate     /etc/perdition/perdition.crt.pem;
@@ -269,7 +272,7 @@ done ) &
 #for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
 for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:999 993:193;do 
 nginx_confgen "$rport"
-nginx -t &>/dev/null || echo "NGINX_ERROR: AFTER LOADING $rport" >&2
+nginx -t &>/dev/null || ( echo "NGINX_ERROR: AFTER LOADING $rport" >&2 ;nginx -t)
 done 
 nginx -t && nginx -s reload 
 
