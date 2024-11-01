@@ -107,7 +107,7 @@ sleepint=$(($sleepint*2))
 sleep $sleepint
 [[  $sleepint -gt 128 ]] && sleepint=16
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
-[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))|grep -e bytes -e loss 
+[[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST"  2>&1 &&  ( echo "YES" >  /dev/shm/READY )  ) |grep -e bytes -e loss 
 done
 
 
