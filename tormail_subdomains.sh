@@ -22,12 +22,12 @@ myip=$(ip a |grep global|grep -v inet6|cut -d"/" -f1|cut -dt -f2 |sed "s/ //g" )
 bash /avahi-to-hosts.sh --repeat   &
 dnsmasq  -f -d --strict-order --no-resolv  --server "127.0.0.11#53" --addn-hosts=/etc/hosts.mdns 2>&1 |sed 's/^/DNSMQ:/g'  &
 echo nameserver 127.0.0.1 > /etc/resolv.conf
-
+mkdir -p /etc/nginx/mail.d/
 (grep ^mail /etc/nginx/nginx.conf  |grep -q mail.d ) || ( 
+mkdir -p /etc/nginx/mail.d/
 
 
    echo '
-worker_processes auto;
 mail { 
 	ssl_session_cache   shared:SSL:10m;
     ssl_session_timeout 10m;
