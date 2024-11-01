@@ -142,7 +142,19 @@ nginx_confgen() {
 	echo $myports|cut -d":" -f1 |grep -q -e 93$   &&  myssl="ssl on;"
 	echo $myports|cut -d":" -f1 |grep -q -e 93$   &&  myproto="imaps"
 
-(
+echo "$myproto"|grep -q smtp && (
+echo '
+    server {
+        listen           '${myports/:*/}' ;
+        proxy_pass        127.0.0.1:'${myports/*:/}';
+        proxy_buffer_size 16k;
+        access_log /dev/stdout main;
+    }
+        
+' > /etc/nginx/stream.d/${myports//:/_}.conf
+
+ )
+echo "$myproto"|grep -q imap && ( (
 echo ' 
  server {
 
@@ -152,21 +164,18 @@ echo '
     ssl_certificate     /etc/perdition/perdition.crt.pem;
     ssl_certificate_key /etc/perdition/perdition.key.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"; '
-
-echo "$myproto"|grep -q imap && echo '
-    location / {
-        proxy_pass '"$myproto"'://127.0.0.1:'${myports/*:/}';
-        proxy_set_header Host $host;
-        #proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Real-IP 127.0.0.1;
-        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-For 127.0.0.1;
-        proxy_set_header X-Forwarded-Proto $scheme; '
+    ssl_ciphers "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"; 
+    proxy_pass '"$myproto"'://127.0.0.1:'${myports/*:/}';
+    proxy_set_header Host $host;
+    #proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Real-IP 127.0.0.1;
+    #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-For 127.0.0.1;
+    proxy_set_header X-Forwarded-Proto $scheme; 
 
 echo ' } '
     
-    ) > /etc/nginx/mail.d/${myports//:/_}.conf
+    ) > /etc/nginx/mail.d/${myports//:/_}.conf )
 
     
 echo -n ; } ; 
