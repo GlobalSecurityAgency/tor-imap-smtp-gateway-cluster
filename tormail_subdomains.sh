@@ -76,14 +76,14 @@ IMAPTARGET=$2
 echo " CHECK: imap.$2"
 testme=imap.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes   
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n' ) |grep Address  && foundit=yes   
 echo "$foundit"|grep -q yes && IMAPTARGET=imap.$2;
 
 echo " CHECK: smtp.$2"
 SMTPTARGET=$2;
 testme=smtp.$2
 foundit=no
-( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n'|grep ^Address  ) && foundit=yes
+( for nameserver in 127.0.0.1 1.1.1.1 4.2.2.4 8.8.8.8 ;do (nslookup -type=A "$testme" "$nameserver" 2>/dev/null|tail -n+3;nslookup -type=AAAA "$testme" "$nameserver" 2>/dev/null|tail -n+3) ;done |sort -u |sed 's/$/ | /g' |tr -d '\n' ) |grep Address  && foundit=yes
 echo "$foundit"|grep -q yes && SMTPTARGET=smtp.$2;
 echo "START: PREFIX=$1; IMAPTARGET=$IMAPTARGET; SMTPTARGET=$SMTPTARGET; TORHOST=$3 LISTEN=$myip"
 
@@ -191,7 +191,11 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;done ) &
+  ( while (true) ;do   
+    #/bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;
+    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$SMTPTARGET:${rport/*:/},socksport=9050 ;sleep 2
+
+    done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
@@ -232,7 +236,9 @@ for rport in 993:993 ;do
 #( while (true) ;do   /bridge -b :${PREFIX}${rport/:*/} -p $IMAPTARGET:${rport/*:/} -p socks5://$TORHOST:9050;sleep 2;done ) &
 
 ( while (true) ;do   
-     /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1  |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;done ) &
+    # /bridge -b :${PREFIX}${rport/*:/} -p $IMAPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1  |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout" ;sleep 2;
+    socat TCP-LISTEN:${PREFIX}${rport/*:/} SOCKS4A:127.0.0.1:$IMAPTARGET:${rport/*:/},socksport=9050 ;sleep 2
+     done ) &
 
 ( while (true) ;do  
 LISTENIP=127.0.0.1
@@ -313,11 +319,11 @@ while (true);do
   for LISTENIP in $myip;do 
 
 echo $(echo " |   "$(date -u )" | CHECK: $LISTENIP |"$(
-#( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK+ || echo ERR ) |tr -d '\n'
+#( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK+ || echo ERR ) |tr -d '\n'
 echo -n " |< SMTP: "
-( echo  "|s:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
-( echo  "|s:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587   2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
-( echo  "|s:465:"           ;curl -kLv smtps://${LISTENIP}:465          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
+( echo  "|s:587:"           ;curl -kLv  smtp://${LISTENIP}:587             2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
+( echo  "|s:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587      2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
+( echo  "|s:465:"           ;curl -kLv smtps://${LISTENIP}:465             2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 echo -n " >|< IMAP: "
 ( echo  "|i:143:"           ;curl -kLv  imap://${LISTENIP}:143             2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
 ( echo  "|i:1143:"          ;curl -kLv  imap://${LISTENIP}:1143            2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY'  && echo "OK " || echo ERR ) |tr -d '\n'
@@ -330,7 +336,7 @@ echo ">|"
 ) |tr -d '\n' )
 done
 
-sleep 1800
+sleep 2350
 echo 
 done
 wait
