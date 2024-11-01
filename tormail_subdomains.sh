@@ -223,7 +223,8 @@ ls -1   /etc/perdition/perdition.crt.pem || (
   wait 
   grep "DH PARAMETERS" /etc/perdition/perdition.crt.pem || ( cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem )
   ls -1 /etc/perdition/combined.pem || ( (cat /etc/perdition/perdition.crt.pem ;cat /etc/perdition/perdition.key.pem) > /etc/perdition/combined.pem ) 
-)
+   )
+
 echo "FORK PERDITIONs"
 ## imaps perdition
 for rport in 993:993 ;do
@@ -282,8 +283,6 @@ rport=999:${PREFIX}993
 sleep 1;
 done ) &
 
-## SOCAT
-(
 ## port 998 will accept encrypted connections and send them via ssl  with SNI
 ( while (true) ;do  
 rport=998:${PREFIX}993
