@@ -1,0 +1,24 @@
+apps:
+- name: imaps
+  ports:
+  - 93
+  - 993
+  targets:
+  - 127.0.0.1:193
+- name: imap
+  ports:
+  - 143
+  - 1143
+  targets:
+  - 127.0.0.1:1144
+- name: smpts
+  ports:
+  - 465
+  targets:
+  - 127.0.0.1:PREFIX465
+- name: smtp
+  ports:
+  - 25
+  - 587
+  targets:
+  - 127.0.0.1:PREFIX587

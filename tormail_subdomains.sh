@@ -32,7 +32,11 @@ mail {
 	ssl_session_cache   shared:MAILSSL:10m;
     ssl_session_timeout 10m;
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers         HIGH:!aNULL:!MD5;    
+    ssl_ciphers         HIGH:!aNULL:!MD5;  
+      proxy_pass_error_message on;
+      imap_capabilities "IMAP4rev1" "UIDPLUS" "IDLE" "LITERAL +" "QUOTA";
+
+
 	   proxy_pass_error_message on;
 	   include /etc/nginx/mail.d/*.conf ;
 	   }
@@ -109,9 +113,9 @@ done
 
 
 
-while (true);do 
-    nginx -g 'daemon off;' 2>&1 | grep -v -e '] TCP 200 ' ;sleep 5;
-done & 
+#while (true);do 
+#    nginx -g 'daemon off;' 2>&1 | grep -v -e '] TCP 200 ' ;sleep 5;
+#done & 
 
 
 nginx_confgen_tcp() { 
@@ -167,7 +171,7 @@ echo '
     ssl_certificate_key /etc/perdition/perdition.key.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers "TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384"; 
-    proxy_pass '"$myproto"'://127.0.0.1:'${myports/*:/}';
+    #proxy_pass '"$myproto"'://127.0.0.1:'${myports/*:/}';
     proxy_set_header Host $host;
     #proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Real-IP 127.0.0.1;
@@ -218,6 +222,7 @@ ls -1   /etc/perdition/perdition.crt.pem || (
                                ) &
   wait 
   grep "DH PARAMETERS" /etc/perdition/perdition.crt.pem || ( cat /etc/perdition/dhparams.pem >> /etc/perdition/perdition.crt.pem )
+  ls -1 /etc/perdition/combined.pem || ( (cat /etc/perdition/perdition.crt.pem ;cat /etc/perdition/perdition.key.pem) > /etc/perdition/combined.pem ) 
 )
 echo "FORK PERDITIONs"
 ## imaps perdition
@@ -231,14 +236,14 @@ for rport in 993:993 ;do
 LISTENIP=127.0.0.1
 #rport=193:993
 #rport=193:${PREFIX}993
-rport=193:999
+rport=193:998
 ## socat will send sni for us 
 
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server $IMAPTARGET --outgoing_port ${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #echo  perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
 #      perdition.imap4s --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/:*/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port 193 --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client" |sed 's/^/PRSSL:/g'
+echo  perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port ${rport/*:/} --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
+      perdition.imap4s --server_resp_line --no_daemon --ssl_mode ssl_all --connect_relog 600 --no_daemon --protocol IMAP4S -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${rport/*:/} --listen_port ${rport/*:/} --bind_address=${LISTENIP} -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1 |sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client" |sed 's/^/PRSSL:/g'
 sleep 2;
 done ) &
 
@@ -246,40 +251,55 @@ done
 
 ( while (true) ;do  
 LISTENIP=127.0.0.1
-rport=1143:143
-echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1144 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
-      perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port 1144 --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
+rport=1144:143
+echo  perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/*:/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive
+      perdition.imap4s --no_daemon --ssl_mode tls_all_force --connect_relog 600 --no_daemon --protocol IMAP4 -f /tmp/null  --outgoing_server 127.0.0.1 --outgoing_port ${PREFIX}${rport/*:/} --listen_port ${rport/*:/} --bind_address=127.0.0.1 -F '+'  --pid_file /tmp/perdition.${rport/*:/}.$LISTENIP.pid --ssl_no_cert_verify --ssl_no_client_cert_verify --ssl_no_cn_verify        --tcp_keepalive 2>&1|sed 's/^/PERDITION@'${rport}' :/g' |grep -v -e Connect: -e "Closing NULL session:" -e "Fatal error establishing SSL connection to client"
 sleep 2;
 done ) &
 
 
 
-#for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
-for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:999 993:193;do 
-nginx_confgen "$rport"
-nginx -t &>/dev/null || ( echo "NGINX_ERROR: AFTER LOADING $rport" >&2 ;nginx -t)
-done 
-nginx -t && nginx -s reload 
+##for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:193 993:193;do 
+# for rport in 25:${PREFIX}587 587:${PREFIX}587 1143:1144 143:1144 93:999 993:193;do 
+#nginx_confgen "$rport"
+#nginx -t &>/dev/null || ( echo "NGINX_ERROR: AFTER LOADING $rport" >&2 ;nginx -t)
+#done 
+#nginx -t && nginx -s reload 
 
 ) & ## end perdition
 
 
 ## SOCAT
 (
-## port 999 will accept unencrypted connections and send them via ssl 
+## port 999 will accept unencrypted connections and send them via ssl  with SNI
 ( while (true) ;do  
 rport=999:${PREFIX}993
 # socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
 #    echo "RUN:"  socat TCP-LISTEN:${rport/:*/},bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
      echo "RUN:"  socat TCP-LISTEN:${rport/:*/},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
                   socat TCP-LISTEN:${rport/:*/},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0  2>&1|sed 's/^/socat999_'$rport' : /g';
+
+sleep 1;
+done ) &
+
+## SOCAT
+(
+## port 998 will accept encrypted connections and send them via ssl  with SNI
+( while (true) ;do  
+rport=998:${PREFIX}993
+# socat TCP-LISTEN:999,bind=${LISTENIP},fork,reuseaddr OPENSSL-CONNECT:127.0.0.1:${rport/:*/},verify=0 2>&1|sed 's/^/socat999_'$rport' : /g';
+     echo "RUN:"  socat OPENSSL-LISTEN:${rport/:*/},fork,reuseaddr,cert=/etc/perdition/combined.pem  OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0 
+                  socat OPENSSL-LISTEN:${rport/:*/},fork,reuseaddr,cert=/etc/perdition/combined.pem  OPENSSL-CONNECT:127.0.0.1:${rport/*:/},snihost=$IMAPTARGET,verify=0  2>&1|sed 's/^/socats_'$rport' : /g';
+
 sleep 1;
 done ) &
 
 )
 
 nginx -T|grep -e 25 -e 587 -e 993 -e 143 
-
+cat /etc/tcpforward.yml|sed 's/PREFIX/'${PREFIX}'/g' > /tmp/forw.yml
+tcpforward -c /tmp/forw.yml & 
+sleep 2
 echo "BOOT:COMPLETED"
 
 ##the main() ping
@@ -289,7 +309,7 @@ while (true);do
   for LISTENIP in $myip;do 
 
 echo $(date -u )" | CHECK: $LISTENIP |"$(
-( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
+#( echo  "|smtp:25 :"           ;curl -kLv  smtp://${LISTENIP}:25           2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|smtp:587:"           ;curl -kLv  smtp://${LISTENIP}:587          2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|smtp:${PREFIX}587:"  ;curl -kLv  smtp://127.0.0.1:${PREFIX}587   2>&1 |grep -q -e OK -e IMAP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
 ( echo  "|smtp:465:"           ;curl -kLv smtps://${LISTENIP}:465          2>&1 |grep -q -e OK -e SMTP -e STARTTLS -e AUTH= -e '^< * CAPABILITY' && echo OK ) |tr -d '\n'
