@@ -108,7 +108,7 @@ echo "HOST DISCOVERY.. ( waiting $sleepint s )CURRENT AVAHI HOSTS:"$(cut -d" " -
 sleepint=$(($sleepint*2))
 [[ -z "$sleepint" ]] && sleepint=2
 sleep $sleepint
-[[  $sleepint -gt 128 ]] && sleepint=4
+[[  $sleepint -gt 128 ]] && sleepint=16
 grep -q "$TORHOST" /etc/hosts.mdns 2>/dev/null|wc -l  |grep -q ^0$ || ( echo "YES" >   /dev/shm/READY)
 [[ -z "$TORHOST" ]] || ( (nslookup "$TORHOST" 127.0.0.11 |tail -n+3 |grep -q ^Addr |head -n1 ) &&  ping -c3 "$TORHOST" &&  ( echo "YES" >  /dev/shm/READY ))|grep -e bytes -e loss 
 done
@@ -194,7 +194,7 @@ echo -n ; } ;
 ## smtp bridge
 #for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
 for  rport in ${PREFIX}587:587 ${PREFIX}465:465;do 
-  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://$TORHOST:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;done ) &
+  ( while (true) ;do   /bridge -b :${rport/:*/} -p $SMTPTARGET:${rport/*:/} -p socks5://127.0.0.1:9050 2>&1 |grep -v -e "INFO Connect chains" -e remote_address=127.0.0.1 -e '"remote_address": "127.0.0.1:' -e 'stepIgnoreErr$' -e 'chain/bridge.go:305' -e "i/o timeout"  2>&1 |sed 's/^/BRIDG:/g' ;sleep 2;done ) &
 done
 
 #for rport in 587:${PREFIX}587 25:${PREFIX}587;do 
@@ -301,7 +301,10 @@ done ) &
 
 nginx -T|grep -e 25 -e 587 -e 993 -e 143 
 cat /etc/tcpforward.yml|sed 's/PREFIX/'"${PREFIX}"'/g' > /tmp/forw.yml
-tcpproxy -c /tmp/forw.yml & 
+while (true);do 
+  tcpproxy -c /tmp/forw.yml 2>&1 |grep -v -e "Closing connection" -e "directing to 127.0.0.1:${PREFIX}143" -e "directing to 127.0.0.1:${PREFIX}993"
+  sleep 2
+done & 
 sleep 2
 echo "BOOT:COMPLETED"
 
