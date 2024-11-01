@@ -34,8 +34,7 @@ mail {
     ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;    
 	   proxy_pass_error_message on;
-	   
-	   include /etc/nginx/mail.d/*.conf 
+	   include /etc/nginx/mail.d/*.conf ;
 	   }
 	   
 	   ' >> /etc/nginx/nginx.conf  )
