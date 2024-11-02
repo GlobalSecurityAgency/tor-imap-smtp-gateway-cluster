@@ -6,7 +6,6 @@ apps:
   - 127.0.0.1:PREFIX993
 - name: imaps
   ports:
-  - 93
   - 993
   targets:
   - 127.0.0.1:193
